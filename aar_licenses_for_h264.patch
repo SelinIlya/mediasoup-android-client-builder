@@ -1,0 +1,26 @@
+diff --git a/tools_webrtc/libs/generate_licenses.py b/tools_webrtc/libs/generate_licenses.py
+index 0faddeabd4..6b77965429 100755
+--- a/tools_webrtc/libs/generate_licenses.py
++++ b/tools_webrtc/libs/generate_licenses.py
+@@ -49,6 +49,13 @@ LIB_TO_LICENSES_DICT = {
+         'third_party/android_deps/libs/'
+         'com_google_errorprone_error_prone_core/LICENSE'
+     ],
++    # Pulled in by ffmpeg_branding="Chrome" + rtc_use_h264=true. Upstream does
++    # not list these because the default build has H264 disabled, so they are
++    # never linked in and never need a license.
++    'ffmpeg': [
++        'third_party/ffmpeg/LICENSE.md',
++        'third_party/ffmpeg/COPYING.LGPLv2.1',
++    ],
+     'fiat': ['third_party/boringssl/src/third_party/fiat/LICENSE'],
+     'guava': ['third_party/android_deps/libs/com_google_guava_guava/LICENSE'],
+     'ijar': ['third_party/ijar/LICENSE'],
+@@ -63,6 +70,7 @@ LIB_TO_LICENSES_DICT = {
+     'libyuv': ['third_party/libyuv/LICENSE'],
+     'llvm-libc': ['third_party/llvm-libc/src/LICENSE.TXT'],
+     'nasm': ['third_party/nasm/LICENSE'],
++    'openh264': ['third_party/openh264/src/LICENSE'],
+     'opus': ['third_party/opus/src/COPYING'],
+     'pffft': ['third_party/pffft/LICENSE'],
+     'protobuf': ['third_party/protobuf/LICENSE'],

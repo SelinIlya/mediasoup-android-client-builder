@@ -22,15 +22,36 @@ git apply $SCRIPT_DIR/use_custom_libcxx_argument_build_support.patch
 
 
 #webrtc_voice_engine.cc create a default AudioDeviceModule if no supplied.
-#    adm_ = webrtc::AudioDeviceModule::Create(
-#       webrtc::AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory_)
+#    adm_ = CreateAudioDeviceModule(
+#       env_, webrtc::AudioDeviceModule::kPlatformDefaultAudio)
+# That goes to AudioDeviceModuleImpl::Create, which has no Android backend
+# (CreatePlatformSpecificObjects only covers Windows/Linux/iOS/Mac) and so
+# returns null on Android. The patch routes it to the Android ADM instead.
 echo "Apply support default audio device module patch"
 cd $SCRIPT_DIR/webrtc_android/src
 git apply $SCRIPT_DIR/support_default_audio_device_module_for_webrtc_voice_engine.patch
 
-# 16 KB page size support
-echo "Apply support 16kb page siZe patches"
+
+# build_aar.py refuses to package the AAR when a linked third_party library has
+# no license mapping:
+#   Exception: Missing licenses for third_party targets: ffmpeg, openh264
+# Upstream omits them because the default build disables H264, so they are never
+# linked. We enable them, so their licenses must ship in the AAR.
+echo "Apply aar licenses for h264 patch"
 cd $SCRIPT_DIR/webrtc_android/src
-git apply $SCRIPT_DIR/16kb_page_size_support.patch
-cd $SCRIPT_DIR/webrtc_android/src/build
-git apply $SCRIPT_DIR/config_16kb_page_size_support.patch
+git apply $SCRIPT_DIR/aar_licenses_for_h264.patch
+
+
+# dist_jar("libwebrtc") in sdk/android/BUILD.gn sets direct_deps_only = true, so
+# only the classes of the targets listed in its deps land in classes.jar.
+# M140 added api/org/webrtc/Environment.java in its own environment_java target
+# and hung it off peerconnection_java, i.e. one level too deep. The result is an
+# aar whose PeerConnectionFactory is compiled against org.webrtc.Environment
+# while the class itself is missing, so every app dies at startup with
+#   java.lang.NoClassDefFoundError: Failed resolution of: Lorg/webrtc/Environment;
+#   at org.webrtc.PeerConnectionFactory$Builder.<init>
+# The patch also drops package= and <uses-sdk> from the aar manifest, which AGP 8
+# rejects.
+echo "Apply aar java classes and manifest patch"
+cd $SCRIPT_DIR/webrtc_android/src
+git apply $SCRIPT_DIR/aar_java_classes_and_manifest.patch

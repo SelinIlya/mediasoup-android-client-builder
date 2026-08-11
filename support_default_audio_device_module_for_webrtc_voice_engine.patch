@@ -1,17 +1,44 @@
-diff --git a/modules/audio_device/audio_device_impl.cc b/modules/audio_device/audio_device_impl.cc
-index 80ed928933..39408b6b6d 100644
---- a/modules/audio_device/audio_device_impl.cc
-+++ b/modules/audio_device/audio_device_impl.cc
-@@ -65,7 +65,11 @@ rtc::scoped_refptr<AudioDeviceModule> AudioDeviceModule::Create(
-     AudioLayer audio_layer,
-     TaskQueueFactory* task_queue_factory) {
-   RTC_DLOG(LS_INFO) << __FUNCTION__;
--  return AudioDeviceModule::CreateForTest(audio_layer, task_queue_factory);
-+  #if defined(WEBRTC_ANDROID)
-+    return CreateAndroidAudioDeviceModule(audio_layer);
-+  #else
-+    return AudioDeviceModule::CreateForTest(audio_layer, task_queue_factory);
-+  #endif
+diff --git a/api/audio/BUILD.gn b/api/audio/BUILD.gn
+index 2e3c44a3ad..1f79774dac 100644
+--- a/api/audio/BUILD.gn
++++ b/api/audio/BUILD.gn
+@@ -34,6 +34,9 @@ if (rtc_include_internal_audio_device) {
+       "../environment",
+       "//third_party/abseil-cpp/absl/base:nullability",
+     ]
++    if (is_android) {
++      deps += [ "../../sdk/android:native_api_audio_device_module" ]
++    }
+   }
  }
  
- // static
+diff --git a/api/audio/create_audio_device_module.cc b/api/audio/create_audio_device_module.cc
+index 26cb6c12d8..ee4db0efa1 100644
+--- a/api/audio/create_audio_device_module.cc
++++ b/api/audio/create_audio_device_module.cc
+@@ -16,12 +16,25 @@
+ #include "api/scoped_refptr.h"
+ #include "modules/audio_device/audio_device_impl.h"
+ 
++#if defined(WEBRTC_ANDROID)
++#include "sdk/android/native_api/audio_device_module/audio_device_android.h"
++#endif
++
+ namespace webrtc {
+ 
+ absl_nullable scoped_refptr<AudioDeviceModule> CreateAudioDeviceModule(
+     const Environment& env,
+     AudioDeviceModule::AudioLayer audio_layer) {
++#if defined(WEBRTC_ANDROID)
++  // AudioDeviceModuleImpl has no Android backend: CreatePlatformSpecificObjects
++  // only handles Windows/Linux/iOS/Mac, so on Android it fails and returns
++  // null. Route the default ADM to the Android implementation instead, so that
++  // callers which do not supply their own ADM (e.g. WebRtcVoiceEngine) get a
++  // working device.
++  return CreateAndroidAudioDeviceModule(env, audio_layer);
++#else
+   return AudioDeviceModuleImpl::Create(env, audio_layer);
++#endif
+ }
+ 
+ }  // namespace webrtc

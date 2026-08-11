@@ -1,8 +1,8 @@
 diff --git a/config/BUILD.gn b/config/BUILD.gn
-index 6fb49548b..dcd2643a4 100644
+index 56ca3ca73..d99e39147 100644
 --- a/config/BUILD.gn
 +++ b/config/BUILD.gn
-@@ -240,6 +240,8 @@ group("common_deps") {
+@@ -290,6 +290,8 @@ group("common_deps") {
  
    if (use_custom_libcxx) {
      public_deps += [ "//buildtools/third_party/libc++" ]
@@ -10,4 +10,4 @@ index 6fb49548b..dcd2643a4 100644
 +    public_deps += [ "//buildtools/third_party/libunwind" ]
    }
  
-   if (use_afl) {
+   if (use_llvm_libatomic) {

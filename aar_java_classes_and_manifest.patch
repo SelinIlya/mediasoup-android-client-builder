@@ -1,0 +1,35 @@
+diff --git a/sdk/android/AndroidManifest.xml b/sdk/android/AndroidManifest.xml
+index 417f45fc5e..09120c2db7 100644
+--- a/sdk/android/AndroidManifest.xml
++++ b/sdk/android/AndroidManifest.xml
+@@ -7,8 +7,10 @@
+  *  tree. An additional intellectual property rights grant can be found
+  *  in the file PATENTS.  All contributing project authors may
+  *  be found in the AUTHORS file in the root of the source tree.
++
++ The package attribute and <uses-sdk> were removed: AGP 8 rejects library
++ manifests that declare either of them (the namespace comes from the consuming
++ module's build.gradle, and minSdk/targetSdk from its defaultConfig).
+ -->
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-    package="org.webrtc">
+-  <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="23" />
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ </manifest>
+diff --git a/sdk/android/BUILD.gn b/sdk/android/BUILD.gn
+index f3db81c780..505cfa33ec 100644
+--- a/sdk/android/BUILD.gn
++++ b/sdk/android/BUILD.gn
+@@ -40,6 +40,12 @@ if (is_android) {
+       ":builtin_audio_codecs_java",
+       ":camera_java",
+       ":default_video_codec_factory_java",
++      # direct_deps_only = true means only the classes of the targets listed
++      # here end up in libwebrtc.jar. environment_java is reachable only
++      # transitively (peerconnection_java -> environment_java), so without this
++      # entry org.webrtc.Environment is compiled but never packaged, and
++      # PeerConnectionFactory.Builder throws NoClassDefFoundError at runtime.
++      ":environment_java",
+       ":filevideo_java",
+       ":hwcodecs_java",
+       ":java_audio_device_module_java",
